@@ -16,8 +16,10 @@ import java.util.List;
         List<AufgabePunkte> findByAufgabeId(Long aufgabeId);
 
         // Alle Aufgaben-Punkte einer Prüfung löschen (hängen über Aufgabe ODER Ergebnis dran).
+        // Subqueries statt mehrstufigem Pfad (ap.aufgabe.pruefung.id) – ein Bulk-DELETE erlaubt
+        // keine Joins über solche Pfade.
         @Modifying
-        @Query("DELETE FROM AufgabePunkte ap WHERE ap.aufgabe.pruefung.id = :pid OR ap.ergebnis.pruefung.id = :pid")
+        @Query("DELETE FROM AufgabePunkte ap WHERE ap.aufgabe.id IN (SELECT a.id FROM Aufgabe a WHERE a.pruefung.id = :pid) OR ap.ergebnis.id IN (SELECT e.id FROM Ergebnis e WHERE e.pruefung.id = :pid)")
         void deleteByPruefungId(@Param("pid") Long pid);
     }
 
