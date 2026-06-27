@@ -418,6 +418,8 @@ app.get("/api/pruefungen", async (req, res) => {
   try {
     const response = await fetch(`${DB_URL}/pruefungen`);
     const data = await parseDbResponse(response);
+    // Neueste Prüfung zuerst (höchste id oben). Nur sortieren, wenn es ein Array ist.
+    if (Array.isArray(data)) data.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
     res.json(data); // geht ans Frontend
   } catch (err) {
     res.status(500).json({ fehler: "DB nicht erreichbar." });
