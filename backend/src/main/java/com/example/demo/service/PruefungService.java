@@ -1,8 +1,13 @@
 package com.example.demo.service;
 import com.example.demo.model.Pruefung;
 import com.example.demo.repository.PruefungRepository;
+import com.example.demo.repository.AufgabePunkteRepository;
+import com.example.demo.repository.AufgabeRepository;
+import com.example.demo.repository.ErgebnisRepository;
+import com.example.demo.repository.NotenschluesselRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +17,15 @@ import java.util.Optional;
 
         @Autowired
         private PruefungRepository pruefungRepository;
+
+        @Autowired
+        private AufgabePunkteRepository aufgabePunkteRepository;
+        @Autowired
+        private AufgabeRepository aufgabeRepository;
+        @Autowired
+        private ErgebnisRepository ergebnisRepository;
+        @Autowired
+        private NotenschluesselRepository notenschluesselRepository;
 
         // Alle Prüfungen laden
         public List<Pruefung> getAllPruefungen() {
@@ -41,8 +55,15 @@ import java.util.Optional;
             return pruefungRepository.save(pruefung);
         }
 
-        // Prüfung löschen
+        // Prüfung löschen – inkl. aller abhängigen Datensätze (sonst blockiert die
+        // Fremdschlüssel-Constraint von aufgabe/ergebnis/... das Löschen). Reihenfolge:
+        // tiefste Kinder zuerst, dann die Prüfung. Alles in einer Transaktion.
+        @Transactional
         public void deletePruefung(Long id) {
+            aufgabePunkteRepository.deleteByPruefungId(id);
+            aufgabeRepository.deleteByPruefungId(id);
+            ergebnisRepository.deleteByPruefungId(id);
+            notenschluesselRepository.deleteByPruefungId(id);
             pruefungRepository.deleteById(id);
         }
     }
